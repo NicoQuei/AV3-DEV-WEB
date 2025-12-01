@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Atendente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] } }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex flex-col font-sans">
+
+<!-- HEADER -->
+<header class="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center shadow-sm z-10">
+    <div class="flex items-center gap-3">
+        <div class="bg-blue-600 text-white p-2 rounded-lg">
+            <span class="material-icons-round text-2xl block">admin_panel_settings</span>
+        </div>
+        <div>
+            <h1 class="font-bold text-lg text-slate-800 leading-tight">Área do Atendente</h1>
+            <p class="text-xs text-slate-500">ServicePoint Admin</p>
+        </div>
+    </div>
+
+    <!-- CONTROLE DO GUICHÊ -->
+    <div class="flex items-center gap-3 bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
+        <span class="text-xs font-bold text-blue-600 uppercase tracking-wide">Você está no Guichê:</span>
+        <input type="number" id="input-guiche" value="01" min="1" max="99"
+               class="w-16 bg-white border border-blue-200 rounded-lg px-2 py-1 text-center font-bold text-blue-700 text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+    </div>
+</header>
+
+<!-- ÁREA PRINCIPAL -->
+<main class="flex-grow flex items-center justify-center p-6 relative overflow-hidden">
+    <!-- Fundo decorativo sutil -->
+    <div class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+
+    <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-10 max-w-md w-full text-center border border-gray-100 relative z-10">
+
+        <div class="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Controle de Fila</span>
+            <span class="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> ONLINE
+                </span>
+        </div>
+
+        <!-- Display da Senha Chamada -->
+        <div class="mb-8 p-8 bg-slate-50 rounded-2xl border border-slate-200 transition-all duration-300 hover:border-blue-200 group">
+            <p class="text-xs text-gray-500 font-semibold uppercase mb-2">Última senha chamada</p>
+            <h2 id="senha-atual" class="text-7xl font-black text-slate-800 tracking-tighter leading-none group-hover:scale-105 transition-transform">--</h2>
+            <div id="status-badge" class="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-gray-200 text-gray-600 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                Aguardando ação
+            </div>
+        </div>
+
+        <!-- BOTÃO GIGANTE DE CHAMAR -->
+        <button onclick="chamarProximo()"
+                class="group w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg py-5 px-8 rounded-2xl shadow-lg shadow-blue-500/30 transform transition-all duration-200 active:scale-95 flex items-center justify-center gap-3 border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">
+            <span class="material-icons-round text-3xl group-hover:rotate-12 transition-transform">notifications_active</span>
+            CHAMAR PRÓXIMO
+        </button>
+
+        <!-- Mensagem de Erro / Feedback -->
+        <div id="msg-erro" class="mt-4 h-6 text-red-500 text-sm font-medium opacity-0 transition-opacity flex items-center justify-center gap-2">
+            <span class="material-icons-round text-sm">info</span> A fila está vazia no momento.
+        </div>
+
+    </div>
+</main>
+
+<footer class="text-center p-3 text-gray-400 text-[10px] border-t border-gray-200 bg-white">
+    Navegação:
+    <a href="recepcao.html" class="hover:text-blue-600 mx-2 transition-colors">Recepção</a> |
+    <a href="painel_atendente.html" class="text-blue-600 font-bold mx-2">Atendente</a> |
+    <a href="tv_sala_espera.html" class="hover:text-blue-600 mx-2 transition-colors">TV Monitor</a>
+</footer>
+
+<script>
+    const API_URL = 'http://localhost:8080/senhas';
+
+    function chamarProximo() {
+        // Pegamos o valor do guichê definido no topo
+        const guiche = document.getElementById('input-guiche').value;
+
+        // Dica: Futuramente você pode passar ?guiche=${guiche} na URL
+        fetch(`${API_URL}/chamar`, { method: 'POST' })
+            .then(res => {
+                if(res.status === 204 || res.headers.get("content-length") === "0") return null;
+                return res.text().then(text => text ? JSON.parse(text) : null);
+            })
+            .then(senha => {
+                const elSenha = document.getElementById('senha-atual');
+                const elBadge = document.getElementById('status-badge');
+                const elErro = document.getElementById('msg-erro');
+
+                if(senha) {
+                    elSenha.innerText = senha.numero;
+                    elBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> CHAMANDO AGORA`;
+                    elBadge.className = "mt-4 inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wider transition-colors";
+
+                    elErro.classList.add('opacity-0');
+                } else {
+                    elErro.classList.remove('opacity-0');
+                    setTimeout(() => elErro.classList.add('opacity-0'), 3000);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Erro de conexão. O servidor Java está rodando?");
+            });
+    }
+</script>
+</body>
+</html>

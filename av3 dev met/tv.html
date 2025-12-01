@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel TV - Sala de Espera</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ícones e Fontes -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    animation: {
+                        'zoom-in': 'zoomIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+                        'fade-in-left': 'fadeInLeft 0.5s ease-out forwards',
+                        'pulse-glow': 'pulseGlow 2s infinite'
+                    },
+                    keyframes: {
+                        zoomIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.8) translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'scale(1) translateY(0)' }
+                        },
+                        fadeInLeft: {
+                            '0%': { opacity: '0', transform: 'translateX(-20px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)' },
+                            '50%': { boxShadow: '0 0 40px rgba(59, 130, 246, 0.8)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Fundo Gradiente Dark */
+        body {
+            background: radial-gradient(circle at top left, #0f172a, #020617);
+            overflow: hidden;
+        }
+
+        /* Efeito de Vidro (Glassmorphism) */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-sidebar {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen text-white flex font-sans selection:bg-blue-500 selection:text-white">
+
+<!-- ÁREA PRINCIPAL (ESQUERDA - 70%) -->
+<main class="w-[70%] h-full relative flex flex-col justify-center items-center p-12">
+
+    <!-- Elemento de Fundo (Brilho Dinâmico) -->
+    <div id="bg-glow" class="absolute top-1/2 left-[40%] transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[120px] transition-colors duration-1000 -z-10"></div>
+
+    <!-- Logo no Topo -->
+    <header class="absolute top-10 left-12 flex items-center gap-4 opacity-80">
+        <div class="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
+            <span class="material-icons-round text-2xl text-blue-400">grid_view</span>
+        </div>
+        <div>
+            <h1 class="font-bold text-2xl tracking-tight leading-none">SERVICE<span class="text-blue-500 font-light">POINT</span></h1>
+            <p class="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold">Sistema de Filas</p>
+        </div>
+    </header>
+
+    <!-- CARTÃO CENTRAL DA SENHA -->
+    <div id="container-senha" class="glass-card rounded-[3rem] p-12 w-full max-w-4xl text-center relative transition-all duration-500 transform hover:border-white/20">
+
+        <!-- Badge "Chamando Agora" -->
+        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-slate-900 px-8 py-3 rounded-full border border-white/10 shadow-2xl flex items-center gap-3">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+            <span class="text-gray-200 text-sm font-bold tracking-[0.15em] uppercase">Chamando Agora</span>
+        </div>
+
+        <!-- Número da Senha (Gigante) -->
+        <h1 id="senha-atual" class="text-[14rem] leading-none font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 tracking-tighter drop-shadow-2xl my-6 animate-zoom-in">
+            --
+        </h1>
+
+        <!-- Informações Inferiores (Tipo e Guichê) -->
+        <div class="flex flex-col items-center gap-6">
+
+            <!-- Badge do Tipo (Geral/Preferencial) -->
+            <div id="tipo-badge" class="px-6 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-lg font-bold uppercase tracking-widest shadow-lg">
+                Aguardando Início...
+            </div>
+
+            <!-- Display do Guichê -->
+            <div class="flex items-center gap-8 bg-white/5 pr-12 pl-8 py-6 rounded-3xl border border-white/10 shadow-xl mt-4 backdrop-blur-md">
+                <div class="bg-gradient-to-br from-blue-600 to-indigo-700 p-4 rounded-2xl shadow-lg shadow-blue-500/20">
+                    <span class="material-icons-round text-4xl text-white">meeting_room</span>
+                </div>
+                <div class="text-left">
+                    <p class="text-gray-400 text-xs uppercase tracking-[0.25em] font-bold mb-1">Dirija-se ao</p>
+                    <p class="text-6xl font-bold text-white leading-none tracking-tight">
+                        Guichê <span id="numero-guiche" class="text-yellow-400">--</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rodapé Informativo -->
+    <div class="absolute bottom-10 text-gray-500 text-sm font-medium tracking-[0.1em] uppercase opacity-60 border-t border-white/5 pt-4">
+        Tenha em mãos seu documento de identificação e número da senha
+    </div>
+</main>
+
+<!-- BARRA LATERAL - HISTÓRICO (DIREITA - 30%) -->
+<aside class="w-[30%] h-full glass-sidebar flex flex-col relative z-20 shadow-2xl">
+
+    <!-- Relógio Digital -->
+    <div class="p-10 border-b border-white/5 bg-slate-900/40">
+        <div id="relogio" class="text-7xl font-bold text-white tracking-tighter font-mono">00:00</div>
+        <div id="data" class="text-blue-400 text-sm font-bold uppercase tracking-[0.2em] mt-2 opacity-80">...</div>
+    </div>
+
+    <!-- Título da Lista -->
+    <div class="px-10 py-8 flex items-center justify-between">
+        <h2 class="text-gray-400 text-xs font-bold uppercase tracking-[0.2em]">Últimas Chamadas</h2>
+        <div class="bg-white/10 p-2 rounded-lg">
+            <span class="material-icons-round text-gray-400 text-lg">history</span>
+        </div>
+    </div>
+
+    <!-- Lista de Histórico (Scrollável) -->
+    <div id="lista-historico" class="flex-1 overflow-y-auto px-8 pb-8 space-y-4 custom-scrollbar">
+        <!-- Os itens serão inseridos aqui via Javascript -->
+    </div>
+</aside>
+
+<!-- Menu de Navegação Oculto (Aparece ao passar o mouse embaixo) -->
+<footer class="fixed bottom-0 left-0 w-full text-center p-2 z-50 opacity-0 hover:opacity-100 transition-opacity bg-black/90 backdrop-blur text-[10px] text-gray-400 border-t border-white/10">
+    Navegação:
+    <a href="recepcao.html" class="hover:text-blue-400 mx-2 transition-colors">Recepção</a> |
+    <a href="painel_atendente.html" class="hover:text-blue-400 mx-2 transition-colors">Atendente</a> |
+    <span class="text-white font-bold mx-2">TV Monitor</span>
+</footer>
+
+<!-- Scripts da Lógica -->
+<script>
+    const API_URL = 'http://localhost:8080/senhas';
+    let ultimaSenhaNumero = "";
+
+    // --- 1. Relógio Digital ---
+    setInterval(() => {
+        const now = new Date();
+        document.getElementById('relogio').innerText = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
+        const opcoesData = { weekday: 'long', day: 'numeric', month: 'long' };
+        const dataStr = now.toLocaleDateString('pt-BR', opcoesData);
+        // Primeira letra maiúscula
+        document.getElementById('data').innerText = dataStr.charAt(0).toUpperCase() + dataStr.slice(1);
+    }, 1000);
+
+    // --- 2. Busca Senha Atual (Loop Infinito) ---
+    async function buscarSenhaAtual() {
+        try {
+            const res = await fetch(`${API_URL}/atual`);
+            if (!res.ok) return; // Se não tiver nada (204)
+
+            const text = await res.text();
+            if (!text) return; // Se corpo vazio
+
+            const senha = JSON.parse(text);
+
+            // Só atualiza se o número mudou
+            if (senha && senha.numero !== ultimaSenhaNumero) {
+                atualizarTela(senha);
+            }
+        } catch (error) {
+            // Erro silencioso para não travar a tela se a internet cair
+        }
+    }
+
+    // --- 3. Atualiza a Interface ---
+    function atualizarTela(novaSenha) {
+        // A. Move a senha antiga para o histórico
+        if (ultimaSenhaNumero !== "" && ultimaSenhaNumero !== "--") {
+            // Recupera o tipo antigo pelo texto que estava na tela
+            const badgeAnterior = document.getElementById('tipo-badge').innerText;
+            const ehPrioritario = badgeAnterior.includes("PRIORITÁRIO");
+            adicionarAoHistorico(ultimaSenhaNumero, ehPrioritario);
+        }
+
+        ultimaSenhaNumero = novaSenha.numero;
+
+        // Elementos da tela
+        const elNumero = document.getElementById('senha-atual');
+        const elGuiche = document.getElementById('numero-guiche');
+        const elBadge = document.getElementById('tipo-badge');
+        const bgGlow = document.getElementById('bg-glow');
+
+        // B. Atualiza Textos
+        elNumero.innerText = novaSenha.numero;
+        // Mostra o guichê se vier do backend, senão mostra "01"
+        elGuiche.innerText = novaSenha.guiche ? novaSenha.guiche : "01";
+
+        // C. Reinicia a Animação de Zoom
+        elNumero.classList.remove('animate-zoom-in');
+        void elNumero.offsetWidth; // Truque para resetar animação CSS
+        elNumero.classList.add('animate-zoom-in');
+
+        // D. Muda Cores baseado no Tipo (Prioritário vs Geral)
+        if (novaSenha.tipo === 'PREFERENCIAL') {
+            elBadge.innerText = "Prioritário";
+            elBadge.className = "px-6 py-2 rounded-full bg-orange-500/10 text-orange-300 border border-orange-500/30 text-lg font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(249,115,22,0.3)]";
+
+            elNumero.className = "text-[14rem] leading-none font-black text-transparent bg-clip-text bg-gradient-to-b from-orange-100 to-orange-500 tracking-tighter drop-shadow-2xl my-6 animate-zoom-in";
+
+            bgGlow.classList.replace('bg-blue-600/10', 'bg-orange-600/20');
+        } else {
+            elBadge.innerText = "Atendimento Geral";
+            elBadge.className = "px-6 py-2 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/30 text-lg font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(59,130,246,0.3)]";
+
+            elNumero.className = "text-[14rem] leading-none font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 tracking-tighter drop-shadow-2xl my-6 animate-zoom-in";
+
+            bgGlow.classList.replace('bg-orange-600/20', 'bg-blue-600/10');
+        }
+
+        // E. Tocar Som (Opcional - Requer interação prévia do usuário no navegador)
+        // const audio = new Audio('alert.mp3'); audio.play().catch(e => {});
+    }
+
+    // --- 4. Adiciona ao Histórico ---
+    function adicionarAoHistorico(numero, ehPrioritario) {
+        const lista = document.getElementById('lista-historico');
+
+        const corBorda = ehPrioritario ? "border-orange-500" : "border-blue-500";
+        const textoTipo = ehPrioritario ? "PRIORITÁRIO" : "GERAL";
+        const hora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
+        const itemHTML = `
+                <div class="glass-card p-5 rounded-2xl border-l-4 ${corBorda} flex justify-between items-center animate-fade-in-left opacity-60 hover:opacity-100 transition-opacity">
+                    <div>
+                        <span class="block text-4xl font-bold text-gray-200 tracking-tighter">${numero}</span>
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">${textoTipo}</span>
+                    </div>
+                    <span class="text-xs text-gray-400 font-mono bg-white/5 px-3 py-1 rounded-lg border border-white/5">${hora}</span>
+                </div>`;
+
+        lista.insertAdjacentHTML('afterbegin', itemHTML);
+
+        // Mantém apenas os últimos 5 itens
+        if (lista.children.length > 5) {
+            lista.lastElementChild.remove();
+        }
+    }
+
+    // Inicia o loop de busca (a cada 2 segundos)
+    setInterval(buscarSenhaAtual, 2000);
+</script>
+</body>
+</html>
