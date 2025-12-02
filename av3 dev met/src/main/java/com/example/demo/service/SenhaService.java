@@ -14,10 +14,11 @@ import java.util.List;
 @Service
 public class SenhaService {
 
+    private TipoSenha ultimoTipoChamado = null;
+
     @Autowired
     private SenhaRepository repository;
 
-    // 1. O paciente clica no Totem
     public Senha gerarSenha(TipoSenha tipo) {
         Senha novaSenha = new Senha();
         novaSenha.setTipo(tipo);
@@ -34,25 +35,53 @@ public class SenhaService {
         return repository.save(novaSenha);
     }
 
-    // 2. O Médico chama o próximo (Regra de Ouro)
     public Senha chamarProximo() {
-        // Tenta achar PREFERENCIAIS aguardando
+
+        // Busca preferenciais e normais aguardando
         List<Senha> preferenciais = repository.findByTipoAndStatusOrderByDataHoraCriacaoAsc(
                 TipoSenha.PREFERENCIAL, StatusSenha.AGUARDANDO);
 
-        if (!preferenciais.isEmpty()) {
-            return atualizarParaChamado(preferenciais.get(0));
-        }
-
-        // Se não tem preferencial, busca NORMAIS
         List<Senha> normais = repository.findByTipoAndStatusOrderByDataHoraCriacaoAsc(
                 TipoSenha.NORMAL, StatusSenha.AGUARDANDO);
 
-        if (!normais.isEmpty()) {
+        // Se ambas estão vazias → fila vazia
+        if (preferenciais.isEmpty() && normais.isEmpty()) {
+            return null;
+        }
+
+        // Lógica de intercalação:
+        // Se último foi NORMAL → chama PREFERENCIAL
+        if (ultimoTipoChamado == TipoSenha.NORMAL && !preferenciais.isEmpty()) {
+            ultimoTipoChamado = TipoSenha.PREFERENCIAL;
+            return atualizarParaChamado(preferenciais.get(0));
+        }
+
+        // Se último foi PREFERENCIAL → chama NORMAL
+        if (ultimoTipoChamado == TipoSenha.PREFERENCIAL && !normais.isEmpty()) {
+            ultimoTipoChamado = TipoSenha.NORMAL;
             return atualizarParaChamado(normais.get(0));
         }
 
-        return null; // Fila vazia
+        // Se nenhum foi chamado ainda, começar pelos normais
+        if (ultimoTipoChamado == null) {
+            if (!normais.isEmpty()) {
+                ultimoTipoChamado = TipoSenha.NORMAL;
+                return atualizarParaChamado(normais.get(0));
+            } else {
+                ultimoTipoChamado = TipoSenha.PREFERENCIAL;
+                return atualizarParaChamado(preferenciais.get(0));
+            }
+        }
+
+        // Se deveria chamar preferencial mas não tem → chama normal
+        if (!normais.isEmpty()) {
+            ultimoTipoChamado = TipoSenha.NORMAL;
+            return atualizarParaChamado(normais.get(0));
+        }
+
+        // Se deveria chamar normal mas não tem → chama preferencial
+        ultimoTipoChamado = TipoSenha.PREFERENCIAL;
+        return atualizarParaChamado(preferenciais.get(0));
     }
 
     // Método auxiliar para não repetir código
