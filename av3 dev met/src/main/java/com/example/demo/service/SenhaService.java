@@ -5,8 +5,8 @@ import com.example.demo.entity.enums.StatusSenha;
 import com.example.demo.entity.Senha;
 import com.example.demo.repository.SenhaRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,89 +14,87 @@ import java.util.List;
 @Service
 public class SenhaService {
 
-    private TipoSenha ultimoTipoChamado = null;
+    private final SenhaRepository repository;
 
-    @Autowired
-    private SenhaRepository repository;
+    public SenhaService(SenhaRepository repository) {
+        this.repository = repository;
+    }
 
+    @Transactional
     public Senha gerarSenha(TipoSenha tipo) {
         Senha novaSenha = new Senha();
         novaSenha.setTipo(tipo);
         novaSenha.setStatus(StatusSenha.AGUARDANDO);
         novaSenha.setDataHoraCriacao(LocalDateTime.now());
 
-        // Salvamos primeiro para gerar o ID
+        // salva para gerar ID
         novaSenha = repository.save(novaSenha);
 
-        // Geramos o número visual (Ex: "N" + ID 10 = "N10")
         String prefixo = (tipo == TipoSenha.PREFERENCIAL) ? "P" : "N";
         novaSenha.setNumero(prefixo + novaSenha.getId());
 
         return repository.save(novaSenha);
     }
 
+    @Transactional
     public Senha chamarProximo() {
 
-        // Busca preferenciais e normais aguardando
-        List<Senha> preferenciais = repository.findByTipoAndStatusOrderByDataHoraCriacaoAsc(
-                TipoSenha.PREFERENCIAL, StatusSenha.AGUARDANDO);
+        // Última senha chamada (opcional, pode ser null)
+        Senha ultimaChamada = repository.findTopByStatusOrderByIdDesc(StatusSenha.CHAMADO);
+        TipoSenha ultimoTipo = (ultimaChamada != null) ? ultimaChamada.getTipo() : null;
 
-        List<Senha> normais = repository.findByTipoAndStatusOrderByDataHoraCriacaoAsc(
-                TipoSenha.NORMAL, StatusSenha.AGUARDANDO);
+        // Filas
+        List<Senha> preferenciais = repository
+                .findByTipoAndStatusOrderByDataHoraCriacaoAsc(TipoSenha.PREFERENCIAL, StatusSenha.AGUARDANDO);
 
-        // Se ambas estão vazias → fila vazia
+        List<Senha> normais = repository
+                .findByTipoAndStatusOrderByDataHoraCriacaoAsc(TipoSenha.NORMAL, StatusSenha.AGUARDANDO);
+
+        // Se as duas estão vazias → não há o que chamar
         if (preferenciais.isEmpty() && normais.isEmpty()) {
             return null;
         }
 
-        // Lógica de intercalação:
-        // Se último foi NORMAL → chama PREFERENCIAL
-        if (ultimoTipoChamado == TipoSenha.NORMAL && !preferenciais.isEmpty()) {
-            ultimoTipoChamado = TipoSenha.PREFERENCIAL;
+        // Lógica de intercalação
+
+        // Se o último foi NORMAL, então tenta chamar PREFERENCIAL
+        if (ultimoTipo == TipoSenha.NORMAL && !preferenciais.isEmpty()) {
             return atualizarParaChamado(preferenciais.get(0));
         }
 
-        // Se último foi PREFERENCIAL → chama NORMAL
-        if (ultimoTipoChamado == TipoSenha.PREFERENCIAL && !normais.isEmpty()) {
-            ultimoTipoChamado = TipoSenha.NORMAL;
+        // Se o último foi PREFERENCIAL, então tenta chamar NORMAL
+        if (ultimoTipo == TipoSenha.PREFERENCIAL && !normais.isEmpty()) {
             return atualizarParaChamado(normais.get(0));
         }
 
-        // Se nenhum foi chamado ainda, começar pelos normais
-        if (ultimoTipoChamado == null) {
+        // Primeira chamada do sistema (nenhum chamado ainda)
+        if (ultimoTipo == null) {
             if (!normais.isEmpty()) {
-                ultimoTipoChamado = TipoSenha.NORMAL;
                 return atualizarParaChamado(normais.get(0));
             } else {
-                ultimoTipoChamado = TipoSenha.PREFERENCIAL;
                 return atualizarParaChamado(preferenciais.get(0));
             }
         }
 
-        // Se deveria chamar preferencial mas não tem → chama normal
+        // Se deveria chamar preferencial mas acabou → chama normal
         if (!normais.isEmpty()) {
-            ultimoTipoChamado = TipoSenha.NORMAL;
             return atualizarParaChamado(normais.get(0));
         }
 
-        // Se deveria chamar normal mas não tem → chama preferencial
-        ultimoTipoChamado = TipoSenha.PREFERENCIAL;
+        // Se deveria chamar normal mas acabou → chama preferencial
         return atualizarParaChamado(preferenciais.get(0));
     }
 
-    // Método auxiliar para não repetir código
     private Senha atualizarParaChamado(Senha senha) {
         senha.setStatus(StatusSenha.CHAMADO);
         return repository.save(senha);
     }
 
-    // 3. Para mostrar na TV
     public List<Senha> listarFila() {
         return repository.findByStatusNot(StatusSenha.FINALIZADO);
     }
 
-    // 4. Pega a senha atual para piscar na tela
     public Senha obterSenhaAtual() {
-        return repository.findFirstByStatusOrderByIdDesc(StatusSenha.CHAMADO);
+        return repository.findTopByStatusOrderByIdDesc(StatusSenha.CHAMADO);
     }
 }

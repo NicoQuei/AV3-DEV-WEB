@@ -15,7 +15,7 @@ public class Senha {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String numero; // Ex: "N-10", "P-12"
+    private String numero;
 
     @Enumerated(EnumType.STRING)
     private TipoSenha tipo;

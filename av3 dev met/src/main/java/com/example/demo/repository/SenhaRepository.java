@@ -14,6 +14,7 @@ public interface SenhaRepository extends JpaRepository<Senha, Long> {
 
     List<Senha> findByStatusNot(StatusSenha status);
 
-    // Busca apenas UM registro (o último que foi chamado)
-    Senha findFirstByStatusOrderByIdDesc(StatusSenha status);
+    // Última senha chamada
+    Senha findTopByStatusOrderByIdDesc(StatusSenha status);
 }
+
