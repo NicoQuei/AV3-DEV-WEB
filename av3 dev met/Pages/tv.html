@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel TV</title>
+    <link rel="stylesheet" href="../styles/tv.css">
+</head>
+<body>
+
+<div class="destaque">
+    <div class="titulo">CHAMANDO AGORA</div>
+    <div id="tv-numero" class="numero-gigante">--</div>
+    <div id="tv-tipo" class="tipo-gigante">Aguardando...</div>
+</div>
+
+<div class="fila">
+    <div class="fila-titulo">Próximos da Fila</div>
+    <div id="lista-espera" class="lista-container">
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080/senhas";
+
+    async function atualizarTV() {
+        try {
+            // 1. PRIMEIRO: Busca quem é o atual (usando a rota inteligente do Java)
+            const responseAtual = await fetch(`${API_URL}/atual`);
+            // O backend pode retornar vazio se não tiver ninguém, então tratamos o erro
+            let atual = null;
+            if (responseAtual.ok) {
+                 const data = await responseAtual.text();
+                 // Se vier texto (JSON), converte. Se vier vazio, fica null.
+                 atual = data ? JSON.parse(data) : null;
+            }
+
+            // Atualiza o Destaque Gigante
+            if (atual && atual.id) {
+                document.getElementById('tv-numero').innerText = atual.numero;
+                document.getElementById('tv-tipo').innerText = atual.tipo;
+            } else {
+                document.getElementById('tv-numero').innerText = "--";
+                document.getElementById('tv-tipo').innerText = "Aguardando...";
+            }
+
+            // 2. SEGUNDO: Busca a lista completa para preencher a fila lateral
+            const responseLista = await fetch(API_URL);
+            const lista = await responseLista.json();
+
+            const listaEl = document.getElementById('lista-espera');
+            listaEl.innerHTML = '';
+
+            // Filtra apenas quem está AGUARDANDO para a lista lateral
+            // (Ignoramos os CHAMADO aqui, pois o chamado já está na tela principal)
+            const espera = lista.filter(s => s.status === 'AGUARDANDO');
+
+            espera.forEach(senha => {
+                listaEl.innerHTML += `
+                    <div class="item-fila">
+                        <span>${senha.numero}</span>
+                        <span class="status-aguardando">${senha.tipo}</span>
+                    </div>`;
+            });
+
+        } catch (e) {
+            console.error("Erro ao atualizar TV", e);
+        }
+    }
+
+    // Atualiza a cada 2 segundos
+    setInterval(atualizarTV, 2000);
+    atualizarTV();
+</script>
+</body>
+</html>

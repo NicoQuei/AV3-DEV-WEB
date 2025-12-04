@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recepção - Emitir Senhas</title>
+    <link rel="stylesheet" href="../styles/atendente.css">
+</head>
+<body>
+
+<div class="card">
+    <h2>Emissor de Senhas</h2>
+    <p>Selecione o tipo de atendimento para o cliente:</p>
+
+    <button class="btn btn-normal" onclick="emitir('NORMAL')">
+        Atendimento Normal
+    </button>
+
+    <button class="btn btn-pref" onclick="emitir('PREFERENCIAL')">
+        Preferencial / Prioritário
+    </button>
+
+    <div id="msg" class="mensagem-sucesso">
+        Senha <strong>N10</strong> emitida com sucesso!
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080/senhas";
+
+    async function emitir(tipo) {
+        try {
+            const response = await fetch(`${API_URL}/criar/${tipo}`, { method: 'POST' });
+            const senha = await response.json();
+            mostrarMensagem(senha.numero);
+        } catch (error) {
+            alert("Erro ao conectar com o servidor.");
+        }
+    }
+
+    function mostrarMensagem(numero) {
+        const msgDiv = document.getElementById('msg');
+        msgDiv.innerHTML = `Senha <strong>${numero}</strong> emitida e enviada para a fila!`;
+        msgDiv.style.display = 'block';
+        setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
+    }
+</script>
+</body>
+</html>

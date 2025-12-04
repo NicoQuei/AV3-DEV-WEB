@@ -1,0 +1,55 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #2c3e50;
+    color: white;
+    display: flex;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+.destaque {
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-right: 2px solid #34495e;
+}
+
+.titulo { font-size: 40px; color: #bdc3c7; }
+.numero-gigante {
+    font-size: 180px;
+    font-weight: bold;
+    color: #e74c3c;
+    margin: 0;
+}
+.tipo-gigante { font-size: 50px; color: #ecf0f1; }
+
+.fila {
+    width: 40%;
+    background: #34495e;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.fila-titulo {
+    text-align: center;
+    border-bottom: 2px solid #7f8c8d;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    font-size: 28px;
+}
+
+.lista-container { overflow-y: auto; flex-grow: 1; }
+.item-fila {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.2);
+    padding: 20px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    font-size: 24px;
+}
+.status-aguardando { color: #f1c40f; }

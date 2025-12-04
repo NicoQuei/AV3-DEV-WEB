@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/senhas")
-@CrossOrigin(origins = "*") // Lembre-se de configurar isso para produção
+@CrossOrigin(origins = "*")
 public class SenhaController {
 
     private final SenhaService service;
