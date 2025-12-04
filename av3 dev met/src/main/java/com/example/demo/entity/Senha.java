@@ -1,14 +1,13 @@
 package com.example.demo.entity;
 
 import com.example.demo.entity.enums.StatusSenha;
-
 import com.example.demo.entity.enums.TipoSenha;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Data // O Lombok cria getters e setters aqui
+@Data
 @Entity
 public class Senha {
     @Id
@@ -24,4 +23,6 @@ public class Senha {
     private StatusSenha status;
 
     private LocalDateTime dataHoraCriacao;
+
+    private LocalDateTime dataHoraChamada;
 }

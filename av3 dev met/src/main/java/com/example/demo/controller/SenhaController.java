@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/senhas")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Lembre-se de configurar isso para produção
 public class SenhaController {
 
     private final SenhaService service;
@@ -26,7 +26,17 @@ public class SenhaController {
 
     @PostMapping("/chamar")
     public ResponseEntity<Senha> chamarProxima() {
-        return ResponseEntity.ok(service.chamarProximo());
+        Senha senha = service.chamarProximo();
+        if (senha == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(senha);
+    }
+
+    @PutMapping("/finalizar/{id}")
+    public ResponseEntity<Void> finalizarSenha(@PathVariable Long id) {
+        service.finalizarAtendimento(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
@@ -37,5 +47,10 @@ public class SenhaController {
     @GetMapping("/atual")
     public ResponseEntity<Senha> pegarSenhaAtual() {
         return ResponseEntity.ok(service.obterSenhaAtual());
+    }
+
+    @GetMapping("/todas")
+    public ResponseEntity<List<Senha>> listarHistorico() {
+        return ResponseEntity.ok(service.listarTodas());
     }
 }

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesa do Atendente</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #eaf2f8; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+
+        .card { background: white; width: 400px; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+
+        h2 { color: #2c3e50; }
+
+        .painel-controle { background: #ecf0f1; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .numero-atual { font-size: 60px; font-weight: bold; color: #27ae60; margin: 10px 0; }
+
+        button { width: 100%; padding: 15px; margin-top: 10px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; color: white; }
+
+        .btn-chamar { background-color: #27ae60; }
+        .btn-chamar:hover { background-color: #219150; }
+
+        .btn-finalizar { background-color: #c0392b; }
+        .btn-finalizar:hover { background-color: #a93226; }
+
+        .btn-disabled { background-color: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>👨‍💼 Área do Atendente</h2>
+
+    <div class="painel-controle">
+        <p>Em atendimento:</p>
+        <div id="lbl-numero" class="numero-atual">--</div>
+        <p id="lbl-tipo">Nenhum atendimento</p>
+    </div>
+
+    <button id="btn-chamar" class="btn-chamar" onclick="chamarProximo()">📢 Chamar Próximo</button>
+    <button id="btn-finalizar" class="btn-finalizar btn-disabled" onclick="finalizarAtendimento()" disabled>✅ Finalizar Atual</button>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080/senhas";
+    let idAtual = null;
+
+    // Ao abrir, verifica se já tem alguém sendo atendido (persistência)
+    async function verificarEstado() {
+        try {
+            const response = await fetch(`${API_URL}/atual`);
+            const senha = await response.json();
+            if (senha && senha.id) {
+                atualizarInterface(senha);
+            }
+        } catch (e) {
+            // Ninguém sendo atendido no momento, tudo bem.
+        }
+    }
+
+    async function chamarProximo() {
+        try {
+            const response = await fetch(`${API_URL}/chamar`, { method: 'POST' });
+
+            if (response.status === 204) {
+                alert("A fila está vazia!");
+                return;
+            }
+
+            const senha = await response.json();
+            atualizarInterface(senha);
+        } catch (e) { alert("Erro ao chamar."); }
+    }
+
+    async function finalizarAtendimento() {
+        if (!idAtual) return;
+
+        try {
+            await fetch(`${API_URL}/finalizar/${idAtual}`, { method: 'PUT' });
+            resetarInterface();
+        } catch (e) { alert("Erro ao finalizar."); }
+    }
+
+    function atualizarInterface(senha) {
+        idAtual = senha.id;
+        document.getElementById('lbl-numero').innerText = senha.numero;
+        document.getElementById('lbl-tipo').innerText = senha.tipo;
+
+        // Habilita botão finalizar e desabilita chamar (opcional, mas bom pra UX)
+        document.getElementById('btn-finalizar').disabled = false;
+        document.getElementById('btn-finalizar').classList.remove('btn-disabled');
+    }
+
+    function resetarInterface() {
+        idAtual = null;
+        document.getElementById('lbl-numero').innerText = "--";
+        document.getElementById('lbl-tipo').innerText = "Livre";
+
+        document.getElementById('btn-finalizar').disabled = true;
+        document.getElementById('btn-finalizar').classList.add('btn-disabled');
+    }
+
+    // Inicia verificando
+    verificarEstado();
+
+</script>
+</body>
+</html>
